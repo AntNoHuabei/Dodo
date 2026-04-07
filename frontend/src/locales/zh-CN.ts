@@ -17,7 +17,9 @@ export default {
     minimize: '最小化',
     maximize: '最大化',
     restore: '还原',
-    close: '关闭'
+    close: '关闭',
+    pin: '置顶',
+    unpin: '取消置顶'
   },
   common: {
     cancel: '取消',

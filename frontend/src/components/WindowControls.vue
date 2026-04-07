@@ -7,12 +7,22 @@ import {useI18n} from 'vue-i18n';
 const {t} = useI18n();
 
 const maximized = ref(false);
+const pinned = ref(false);
 
 async function refreshMaximized() {
   try {
     maximized.value = await Window.IsMaximised();
   } catch {
     maximized.value = false;
+  }
+}
+
+function onPin() {
+  pinned.value = !pinned.value;
+  try {
+    Window.SetAlwaysOnTop(pinned.value);
+  } catch {
+    /* noop: dev browser / no runtime */
   }
 }
 
@@ -57,6 +67,23 @@ onUnmounted(() => {
       <button
           type="button"
           class="titlebar-btn"
+          :class="{'titlebar-btn-pinned': pinned}"
+          :title="pinned ? t('titlebar.unpin') : t('titlebar.pin')"
+          @click="onPin"
+      >
+      <svg v-if="!pinned" xmlns="http://w3.org" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <line x1="15" y1="5" x2="19" y2="9" />
+        <path d="m14 7 4.5 4.5" />
+        <path d="M5 21 9 17" />
+        <path d="M16 7 11 12 7 11l-3 3 7 7 3-3-1-4 5-5z" />
+      </svg>
+      <svg v-if="pinned" xmlns="http://w3.org" width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+        <path d="M16,12V4H17V2H7V4H8V12L6,14V16H11V22H13V16H18V14L16,12Z" />
+      </svg>
+      </button>
+      <button
+          type="button"
+          class="titlebar-btn"
           :title="t('titlebar.minimize')"
           @click="onMinimize"
       >
@@ -88,7 +115,7 @@ onUnmounted(() => {
           :title="t('titlebar.close')"
           @click="onClose"
       >
-        <svg viewBox="0 0 12 12" width="12" height="12" aria-hidden="true">
+        <svg viewBox="0 0 12 12" width="16" height="16" aria-hidden="true">
           <path
               fill="none"
               stroke="currentColor"
@@ -170,6 +197,10 @@ onUnmounted(() => {
 
 .titlebar-btn-close:hover {
   background-color: #ff4d4f;
+}
+
+.titlebar-btn-pinned {
+  color: var(--el-color-primary);
 }
 
 

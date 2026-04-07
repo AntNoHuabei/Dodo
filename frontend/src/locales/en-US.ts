@@ -17,7 +17,9 @@ export default {
     minimize: 'Minimize',
     maximize: 'Maximize',
     restore: 'Restore',
-    close: 'Close'
+    close: 'Close',
+    pin: 'Pin',
+    unpin: 'Unpin'
   },
   common: {
     cancel: 'Cancel',
