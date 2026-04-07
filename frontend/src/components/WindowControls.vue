@@ -52,6 +52,7 @@ onUnmounted(() => {
     <div class="titlebar-left window-titlebar-drag ">
       <slot name="title">Dodo 应用</slot>
     </div>
+    <div class="custom-titlebar-page-title" id="page-title-target"></div>
     <div class="titlebar-right">
       <button
           type="button"
@@ -114,6 +115,16 @@ onUnmounted(() => {
   user-select: none;
   cursor: default;
   -webkit-app-region: drag;
+  position: relative;
+}
+
+.custom-titlebar-page-title {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  color: var(--el-text-color-primary);
+  font-size: 14px;
+  font-weight: 500;
 }
 .window-titlebar-drag {
   flex: 1;

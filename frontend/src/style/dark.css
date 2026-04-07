@@ -1,0 +1,72 @@
+html.dark {
+    /* 核心主色：赤红 (在深黑背景下具有极强的穿透力) */
+    --el-color-primary: #ef4444;
+    --el-color-primary-light-3: #f87171; /* 悬浮态 */
+    --el-color-primary-light-5: #fca5a5; /* 次要状态 */
+    --el-color-primary-light-7: #450a0a; /* 弱化状态：深红叠层 */
+    --el-color-primary-light-8: #2d0606; /* 极淡背景 */
+    --el-color-primary-light-9: #1c0303; /* 组件浅背景色 */
+    --el-color-primary-dark-2: #dc2626;  /* 点击态 */
+
+    /* 辅助色：暗调适配版 (降低饱和度，避免干扰主色) */
+    /* 成功：墨绿 */
+    --el-color-success: #10b981;
+    --el-color-success-light-3: #34d399;
+    --el-color-success-light-5: #6ee7b7;
+    --el-color-success-light-9: #022c22;
+    --el-color-success-dark-2: #059669;
+
+    /* 警告：落日橙 */
+    --el-color-warning: #f59e0b;
+    --el-color-warning-light-3: #fbbf24;
+    --el-color-warning-light-5: #fcd34d;
+    --el-color-warning-light-9: #2d1202;
+    --el-color-warning-dark-2: #d97706;
+
+    /* 危险：保持与主色红色系协调 */
+    --el-color-danger: #f43f5e;
+    --el-color-danger-light-3: #fb7185;
+    --el-color-danger-light-9: #310712;
+    --el-color-danger-dark-2: #e11d48;
+
+    /* 信息：中性石灰色 */
+    --el-color-info: #737373;
+    --el-color-info-light-3: #a3a3a3;
+    --el-color-info-light-5: #d4d4d4;
+    --el-color-info-light-9: #171717;
+    --el-color-info-dark-2: #525252;
+
+    /* 文字颜色：冷白与碳灰层级 */
+    --el-text-color-primary: #ffffff;   /* 标题文字：纯白 */
+    --el-text-color-regular: #d1d5db;   /* 正文文字 */
+    --el-text-color-secondary: #9ca3af; /* 辅助文字 */
+    --el-text-color-placeholder: #4b5563;/* 提示文字 */
+    --el-text-color-disabled: #374151;   /* 禁用文字 */
+
+    /* 边框与填充：煤炭黑阶梯 (去掉所有蓝色调，保持中性) */
+    --el-border-color: #262626;        /* 更有质感的炭黑边框 */
+    --el-border-color-light: #171717;
+    --el-border-color-lighter: #0a0a0a;
+    --el-border-color-extra-light: #000000;
+    --el-border-color-dark: #404040;
+
+    --el-fill-color: #262626;          /* 组件填充：如 Input 背景 */
+    --el-fill-color-light: #404040;
+    --el-fill-color-lighter: #171717;
+    --el-fill-color-extra-light: #0a0a0a;
+    --el-fill-color-dark: #525252;
+    --el-fill-color-blank: #171717;
+
+    /* 页面背景：纯净黑曜石 */
+    --el-bg-color: #171717;            /* 容器背景 (Card, Dialog) */
+    --el-bg-color-page: #0a0a0a;       /* 整个页面底层背景 */
+    --el-bg-color-overlay: #262626;    /* 弹出菜单/悬浮层 */
+
+    /* 阴影：深色模式需要带有深度的阴影 */
+    --el-box-shadow: 0 12px 32px 4px rgba(0, 0, 0, 0.6);
+    --el-box-shadow-light: 0 6px 16px 0 rgba(0, 0, 0, 0.5);
+    --el-box-shadow-lighter: 0 3px 6px -4px rgba(0, 0, 0, 0.4);
+
+    /* 遮罩：纯黑半透明 */
+    --el-mask-color: rgba(0, 0, 0, 0.8);
+}

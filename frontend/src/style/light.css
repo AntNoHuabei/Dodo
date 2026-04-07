@@ -1,0 +1,81 @@
+html.light{
+    /* --- 核心主色：动力橙 (Energy Orange) --- */
+    --el-color-primary: #f97316;
+    --el-color-primary-light-3: #fb923c; /* 悬浮态 */
+    --el-color-primary-light-5: #fdba74; /* 次要状态 */
+    --el-color-primary-light-7: #fed7aa; /* 弱化状态 */
+    --el-color-primary-light-8: #ffedd5; /* 极淡背景 */
+    --el-color-primary-light-9: #fff7ed; /* 组件浅背景 */
+    --el-color-primary-dark-2: #ea580c;  /* 点击态 */
+
+    /* --- 辅助色：高对比度、高饱和度 --- */
+    /* 成功：亮翡翠 */
+    --el-color-success: #10b981;
+    --el-color-success-light-3: #6ee7b7;
+    --el-color-success-light-5: #a7f3d0;
+    --el-color-success-light-7: #d1fae5;
+    --el-color-success-light-8: #ecfdf5;
+    --el-color-success-light-9: #f0fdf4;
+    --el-color-success-dark-2: #059669;
+
+    /* 警告：明黄 (与橙色形成同色系过渡) */
+    --el-color-warning: #facc15;
+    --el-color-warning-light-3: #fde047;
+    --el-color-warning-light-5: #fef08a;
+    --el-color-warning-light-7: #fef9c3;
+    --el-color-warning-light-8: #fefce8;
+    --el-color-warning-light-9: #fffbeb;
+    --el-color-warning-dark-2: #ca8a04;
+
+    /* 危险：珊瑚红 */
+    --el-color-danger: #ef4444;
+    --el-color-danger-light-3: #fca5a5;
+    --el-color-danger-light-5: #fecaca;
+    --el-color-danger-light-7: #fee2e2;
+    --el-color-danger-light-8: #fef2f2;
+    --el-color-danger-light-9: #fff1f1;
+    --el-color-danger-dark-2: #dc2626;
+
+    /* 信息：中性蓝灰 (中和橙色的燥热) */
+    --el-color-info: #64748b;
+    --el-color-info-light-3: #94a3b8;
+    --el-color-info-light-5: #cbd5e1;
+    --el-color-info-light-7: #e2e8f0;
+    --el-color-info-light-8: #f1f5f9;
+    --el-color-info-light-9: #f8fafc;
+    --el-color-info-dark-2: #475569;
+
+    /* --- 文字颜色：深邃的暖灰色 --- */
+    --el-text-color-primary: #1e293b;   /* 主要文字：几乎黑 */
+    --el-text-color-regular: #475569;   /* 正文 */
+    --el-text-color-secondary: #64748b; /* 辅助说明 */
+    --el-text-color-placeholder: #94a3b8;/* 占位符 */
+    --el-text-color-disabled: #cbd5e1;   /* 禁用态 */
+
+    /* --- 边框与填充：干净利落 --- */
+    --el-border-color: #e2e8f0;
+    --el-border-color-light: #f1f5f9;
+    --el-border-color-lighter: #f8fafc;
+    --el-border-color-extra-light: #ffffff;
+    --el-border-color-dark: #cbd5e1;
+
+    --el-fill-color: #f1f5f9;
+    --el-fill-color-light: #f8fafc;
+    --el-fill-color-lighter: #fafafb;
+    --el-fill-color-extra-light: #ffffff;
+    --el-fill-color-dark: #e2e8f0;
+    --el-fill-color-blank: #ffffff;
+
+    /* --- 页面背景 --- */
+    --el-bg-color: #ffffff;
+    --el-bg-color-page: #f8fafc;
+    --el-bg-color-overlay: #ffffff;
+
+    /* --- 阴影：更有悬浮感与冲击力 --- */
+    --el-box-shadow: 0 12px 32px 4px rgba(249, 115, 22, 0.04), 0 8px 20px rgba(0, 0, 0, 0.08);
+    --el-box-shadow-light: 0 6px 16px 0 rgba(0, 0, 0, 0.08);
+    --el-box-shadow-lighter: 0 3px 6px -4px rgba(0, 0, 0, 0.12), 0 6px 16px 0 rgba(0, 0, 0, 0.08), 0 9px 28px 8px rgba(0, 0, 0, 0.05);
+
+    /* --- 其他 --- */
+    --el-border-radius-base: 8px; /* 建议圆角稍大，增强现代动感 */
+}

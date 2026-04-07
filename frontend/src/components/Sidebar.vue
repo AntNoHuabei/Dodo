@@ -4,6 +4,10 @@ import { useI18n } from 'vue-i18n';
 import { useDark } from '@vueuse/core';
 import { ElMenu, ElMenuItem, ElTooltip, ElIcon } from 'element-plus';
 
+const emit = defineEmits<{
+  (e: 'menu-change', index: string): void;
+}>();
+
 // 国际化
 const { t, locale } = useI18n();
 
@@ -12,7 +16,7 @@ const isDark = useDark({
   selector: 'html',
   attribute: 'class',
   valueDark: 'dark',
-  valueLight: ''
+  valueLight: 'light'
 });
 
 // 切换语言
@@ -22,14 +26,19 @@ const switchLanguage = () => {
 
 // 菜单数据
 const menuItems = computed(() => [
-  { id: 1, icon: 'HomeFilled', title: t('app.menu.home') },
-  { id: 2, icon: 'Setting', title: t('app.menu.settings') },
-  { id: 3, icon: 'User', title: t('app.menu.profile') },
-  { id: 4, icon: 'HelpFilled', title: t('app.menu.help') }
+  { id: 1, icon: 'List', title: t('app.menu.task') },
+  { id: 2, icon: 'Calendar', title: t('app.menu.weekly') },
+  { id: 3, icon: 'Setting', title: t('app.menu.settings') }
+
 ]);
 
 // 当前选中的菜单项
 const activeIndex = ref('1');
+
+const handleMenuSelect = (index: string) => {
+  activeIndex.value = index;
+  emit('menu-change', index);
+};
 </script>
 
 <template>
@@ -40,6 +49,7 @@ const activeIndex = ref('1');
         :default-active="activeIndex"
         class="sidebar-menu"
         mode="vertical"
+        @select="handleMenuSelect"
       >
         <el-menu-item
           v-for="item in menuItems"
@@ -82,19 +92,6 @@ const activeIndex = ref('1');
       >
         <button class="sidebar-footer-btn language-btn el-menu-item" @click="switchLanguage">
           {{ locale === 'zh-CN' ? 'CN' : 'EN' }}
-        </button>
-      </el-tooltip>
-
-      <!-- 设置按钮 -->
-      <el-tooltip
-        :content="t('app.menu.settings')"
-        placement="right"
-        effect="dark"
-      >
-        <button class="sidebar-footer-btn el-menu-item">
-          <el-icon class="footer-icon">
-            <Setting />
-          </el-icon>
         </button>
       </el-tooltip>
     </div>
