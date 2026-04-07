@@ -4,9 +4,14 @@ import (
 	"embed"
 	_ "embed"
 	"log"
-	"time"
+	"os"
+	"path/filepath"
+	"runtime"
 
 	"github.com/wailsapp/wails/v3/pkg/application"
+	"github.com/wailsapp/wails/v3/pkg/services/sqlite"
+	"golang.org/x/sys/windows"
+	"golang.org/x/sys/windows/registry"
 )
 
 // Wails uses Go's `embed` package to embed the frontend files into the binary.
@@ -17,29 +22,122 @@ import (
 //go:embed all:frontend/dist
 var assets embed.FS
 
-func init() {
-	// Register a custom event whose associated data type is string.
-	// This is not required, but the binding generator will pick up registered events
-	// and provide a strongly typed JS/TS API for them.
-	application.RegisterEvent[string]("time")
+// getAppDataDir 获取应用程序数据目录，使用平台API确保可靠性
+func getAppDataDir() string {
+	switch runtime.GOOS {
+	case "windows":
+		key, err := registry.OpenKey(registry.CURRENT_USER, `Software\Microsoft\Windows\CurrentVersion\Explorer\Shell Folders`, 0)
+		if err != nil {
+			userProfile := os.Getenv("USERPROFILE")
+			return filepath.Join(userProfile, "AppData", "Roaming", "dodo")
+		}
+		defer key.Close()
+
+		var value string
+		value, _, err = key.GetStringValue("AppData")
+		if err != nil || value == "" {
+			userProfile := os.Getenv("USERPROFILE")
+			return filepath.Join(userProfile, "AppData", "Roaming", "dodo")
+		}
+		return filepath.Join(value, "dodo")
+
+	case "darwin":
+		home := os.Getenv("HOME")
+		if home == "" {
+			if info, err := os.UserHomeDir(); err == nil {
+				home = info
+			}
+		}
+		return filepath.Join(home, "Library", "Application Support", "dodo")
+
+	default:
+		xdgConfig := os.Getenv("XDG_CONFIG_HOME")
+		if xdgConfig == "" {
+			home := os.Getenv("HOME")
+			if home == "" {
+				if info, err := os.UserHomeDir(); err == nil {
+					home = info
+				}
+			}
+			xdgConfig = filepath.Join(home, ".config")
+		}
+		return filepath.Join(xdgConfig, "dodo")
+	}
+}
+
+// getLocalAppDataDir 获取本地应用程序数据目录（Windows）
+func getLocalAppDataDir() string {
+	switch runtime.GOOS {
+	case "windows":
+		key, err := registry.OpenKey(registry.CURRENT_USER, `Software\Microsoft\Windows\CurrentVersion\Explorer\Shell Folders`, 0)
+		if err != nil {
+			userProfile := os.Getenv("USERPROFILE")
+			return filepath.Join(userProfile, "AppData", "Local", "dodo")
+		}
+		defer key.Close()
+
+		var value string
+		value, _, err = key.GetStringValue("Local AppData")
+		if err != nil || value == "" {
+			userProfile := os.Getenv("USERPROFILE")
+			return filepath.Join(userProfile, "AppData", "Local", "dodo")
+		}
+		return filepath.Join(value, "dodo")
+
+	case "darwin":
+		home := os.Getenv("HOME")
+		if home == "" {
+			if info, err := os.UserHomeDir(); err == nil {
+				home = info
+			}
+		}
+		return filepath.Join(home, "Library", "Application Support", "dodo")
+
+	default:
+		xdgData := os.Getenv("XDG_DATA_HOME")
+		if xdgData == "" {
+			home := os.Getenv("HOME")
+			if home == "" {
+				if info, err := os.UserHomeDir(); err == nil {
+					home = info
+				}
+			}
+			xdgData = filepath.Join(home, ".local", "share")
+		}
+		return filepath.Join(xdgData, "dodo")
+	}
+}
+
+// hideFileWindows 仅在Windows上隐藏文件
+func hideFileWindows(path string) {
+	if runtime.GOOS == "windows" {
+		attr, err := windows.GetFileAttributes(windows.StringToUTF16Ptr(path))
+		if err == nil {
+			windows.SetFileAttributes(windows.StringToUTF16Ptr(path), attr|windows.FILE_ATTRIBUTE_HIDDEN)
+		}
+	}
 }
 
 // main function serves as the application's entry point. It initializes the application, creates a window,
 // and starts a goroutine that emits a time-based event every second. It subsequently runs the application and
 // logs any error that might occur.
 func main() {
+	appDataPath := getAppDataDir()
+	dbPath := filepath.Join(appDataPath, "data.db")
 
-	// Create a new Wails application by providing the necessary options.
-	// Variables 'Name' and 'Description' are for application metadata.
-	// 'Assets' configures the asset server with the 'FS' variable pointing to the frontend files.
-	// 'Bind' is a list of Go struct instances. The frontend has access to the methods of these instances.
-	// 'Mac' options tailor the application when running on macOS.
-	greetService := &GreetService{}
+	if err := os.MkdirAll(appDataPath, 0755); err != nil {
+		log.Fatalf("Failed to create app data directory: %v", err)
+	}
+
+	if runtime.GOOS == "windows" {
+		hideFileWindows(appDataPath)
+	}
+
 	app := application.New(application.Options{
 		Name:        "Dodo",
-		Description: "A demo of using raw HTML & CSS",
+		Description: "Dodo",
 		Services: []application.Service{
-			application.NewService(greetService),
+			application.NewService(sqlite.NewWithConfig(&sqlite.Config{DBSource: dbPath})),
 		},
 		Assets: application.AssetOptions{
 			Handler: application.AssetFileServerFS(assets),
@@ -55,8 +153,8 @@ func main() {
 	// 'Mac' options tailor the window when running on macOS.
 	// 'BackgroundColour' is the background colour of the window.
 	// 'URL' is the URL that will be loaded into the webview.
-	window := app.Window.NewWithOptions(application.WebviewWindowOptions{
-		Title:     "Dodo 应用",
+	app.Window.NewWithOptions(application.WebviewWindowOptions{
+		Title:     "Dodo",
 		Frameless: true,
 		Mac: application.MacWindow{
 			InvisibleTitleBarHeight: 50,
@@ -66,19 +164,6 @@ func main() {
 		BackgroundColour: application.NewRGB(27, 38, 54),
 		URL:              "/",
 	})
-
-	// 将窗口引用传递给服务
-	greetService.Window = window
-
-	// Create a goroutine that emits an event containing the current time every second.
-	// The frontend can listen to this event and update the UI accordingly.
-	go func() {
-		for {
-			now := time.Now().Format(time.RFC1123)
-			app.Event.Emit("time", now)
-			time.Sleep(time.Second)
-		}
-	}()
 
 	// Run the application. This blocks until the application has been exited.
 	err := app.Run()

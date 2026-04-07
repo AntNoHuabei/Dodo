@@ -1,8 +1,9 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue';
+import { ref, computed, onMounted } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { Plus } from '@element-plus/icons-vue';
 import { ElCard, ElCheckbox, ElButton, ElInput, ElTag, ElEmpty, ElDialog, ElSelect, ElOption, ElMessageBox } from 'element-plus';
+import { Open, Execute, Query } from '../../bindings/github.com/wailsapp/wails/v3/pkg/services/sqlite/sqliteservice';
 
 const { t } = useI18n();
 
@@ -13,13 +14,46 @@ interface Task {
   priority: 'low' | 'medium' | 'high';
 }
 
-const tasks = ref<Task[]>([
-  { id: 1, title: '完成项目需求分析', completed: true, priority: 'high' },
-  { id: 2, title: '设计数据库结构', completed: false, priority: 'high' },
-  { id: 3, title: '编写前端组件', completed: false, priority: 'medium' },
-  { id: 4, title: '编写后端API', completed: false, priority: 'medium' },
-  { id: 5, title: '编写测试用例', completed: false, priority: 'low' }
-]);
+const dbReady = ref(false);
+
+const initDatabase = async () => {
+  try {
+    await Open();
+    await Execute(`
+      CREATE TABLE IF NOT EXISTS tasks (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        title TEXT NOT NULL,
+        completed INTEGER DEFAULT 0,
+        priority TEXT DEFAULT 'medium'
+      )
+    `);
+    dbReady.value = true;
+    await loadTasks();
+  } catch (error) {
+    console.error('数据库初始化失败:', error);
+  }
+};
+
+const loadTasks = async () => {
+  if (!dbReady.value) return;
+  try {
+    const rows = await Query('SELECT id, title, completed, priority FROM tasks ORDER BY id DESC') as any[];
+    tasks.value = rows.map(row => ({
+      id: row.id,
+      title: row.title,
+      completed: Boolean(row.completed),
+      priority: row.priority as 'low' | 'medium' | 'high'
+    }));
+  } catch (error) {
+    console.error('加载任务失败:', error);
+  }
+};
+
+const tasks = ref<Task[]>([]);
+
+onMounted(() => {
+  initDatabase();
+});
 
 const newTaskTitle = ref('');
 const dialogVisible = ref(false);
@@ -59,25 +93,37 @@ const openDialog = (task?: Task) => {
   dialogVisible.value = true;
 };
 
-const saveTask = () => {
+const saveTask = async () => {
   if (newTaskTitle.value.trim()) {
     if (editingTask.value) {
       editingTask.value.title = newTaskTitle.value.trim();
       editingTask.value.priority = newTaskPriority.value;
+      if (dbReady.value) {
+        await Execute('UPDATE tasks SET title = ?, priority = ? WHERE id = ?', 
+          newTaskTitle.value.trim(), newTaskPriority.value, editingTask.value.id);
+      }
     } else {
+      const newId = Date.now();
       tasks.value.push({
-        id: Date.now(),
+        id: newId,
         title: newTaskTitle.value.trim(),
         completed: false,
         priority: newTaskPriority.value
       });
+      if (dbReady.value) {
+        await Execute('INSERT INTO tasks (id, title, completed, priority) VALUES (?, ?, 0, ?)',
+          newId, newTaskTitle.value.trim(), newTaskPriority.value);
+      }
     }
     dialogVisible.value = false;
   }
 };
 
-const toggleTask = (task: Task) => {
+const toggleTask = async (task: Task) => {
   task.completed = !task.completed;
+  if (dbReady.value) {
+    await Execute('UPDATE tasks SET completed = ? WHERE id = ?', task.completed ? 1 : 0, task.id);
+  }
 };
 
 const deleteTask = async (id: number) => {
@@ -91,6 +137,9 @@ const deleteTask = async (id: number) => {
         type: 'warning'
       }
     );
+    if (dbReady.value) {
+      await Execute('DELETE FROM tasks WHERE id = ?', id);
+    }
     tasks.value = tasks.value.filter(t => t.id !== id);
   } catch {
     // 用户取消删除

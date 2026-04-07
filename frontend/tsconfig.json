@@ -11,9 +11,29 @@
     "resolveJsonModule": true,
     "isolatedModules": true,
     "esModuleInterop": true,
-    "lib": ["ESNext", "DOM"],
+    "allowJs": true,
+    "lib": [
+      "ESNext",
+      "DOM"
+    ],
     "skipLibCheck": true,
-    "noEmit": true
+    "noEmit": true,
+    "baseUrl": ".",
+    "paths": {
+      "./models.js": [
+        "./bindings/github.com/wailsapp/wails/v3/pkg/services/sqlite/models.ts"
+      ],
+      "./stmt.js": [
+        "./bindings/github.com/wailsapp/wails/v3/pkg/services/sqlite/stmt.js"
+      ]
+    }
   },
-  "include": ["src/**/*.ts", "src/**/*.d.ts", "src/**/*.tsx", "src/**/*.vue", "bindings"],
+  "include": [
+    "src/**/*.ts",
+    "src/**/*.d.ts",
+    "src/**/*.tsx",
+    "src/**/*.vue",
+    "bindings/**/*.ts",
+    "bindings/**/*.js"
+  ],
 }
