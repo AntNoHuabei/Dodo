@@ -1,0 +1,13 @@
+[Desktop Entry]
+Version=1.0
+Name=My Product
+Comment=A Dodo application
+# The Exec line includes %u to pass the URL to the application
+Exec=/usr/local/bin/dodo.exe %u
+Terminal=false
+Type=Application
+Icon=dodo.exe
+Categories=Utility;
+StartupWMClass=dodo.exe
+
+ 
