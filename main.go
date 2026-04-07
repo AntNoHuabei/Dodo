@@ -145,6 +145,9 @@ func main() {
 		Mac: application.MacOptions{
 			ApplicationShouldTerminateAfterLastWindowClosed: true,
 		},
+		Windows: application.WindowsOptions{
+			AdditionalBrowserArgs: []string{"--disable-web-security", "--no-proxy-server", "--disable-features=ElasticOverscroll", "--disable-pinch"},
+		},
 	})
 
 	// Create a new window with the necessary options.
