@@ -39,10 +39,26 @@ export default {
     expandCompleted: 'Show Completed',
     collapseCompleted: 'Hide Completed',
     priority: {
+      label: 'Priority',
       high: 'High',
       medium: 'Medium',
       low: 'Low',
       select: 'Select priority'
+    },
+    type: {
+      label: 'Task Type',
+      bug: 'Bug',
+      feature: 'Feature',
+      refactor: 'Refactor',
+      performance: 'Performance',
+      security: 'Security',
+      chore: 'Chore',
+      migration: 'Migration',
+      ci: 'CI',
+      test: 'Test',
+      review: 'Review',
+      doc: 'Doc',
+      subtask: 'Subtask'
     }
   },
   weekly: {

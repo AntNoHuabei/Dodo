@@ -39,10 +39,26 @@ export default {
     expandCompleted: '展开已完成',
     collapseCompleted: '折叠已完成',
     priority: {
+      label: '优先级',
       high: '高',
       medium: '中',
       low: '低',
       select: '选择优先级'
+    },
+    type: {
+      label: '任务类型',
+      bug: 'Bug',
+      feature: '功能',
+      refactor: '重构',
+      performance: '性能',
+      security: '安全',
+      chore: '杂务',
+      migration: '迁移',
+      ci: 'CI',
+      test: '测试',
+      review: '审查',
+      doc: '文档',
+      subtask: '子任务'
     }
   },
   weekly: {

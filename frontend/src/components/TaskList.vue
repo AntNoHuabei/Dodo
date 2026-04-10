@@ -9,9 +9,11 @@ const { t } = useI18n();
 
 interface Task {
   id: number;
+  number: number;
   title: string;
   completed: boolean;
   priority: 'low' | 'medium' | 'high';
+  type: 'bug' | 'feature' | 'refactor' | 'performance' | 'security' | 'chore' | 'migration' | 'ci' | 'test' | 'review' | 'doc' | 'subtask';
 }
 
 const dbReady = ref(false);
@@ -19,12 +21,15 @@ const dbReady = ref(false);
 const initDatabase = async () => {
   try {
     await Open();
+    // 创建表（如果不存在）
     await Execute(`
       CREATE TABLE IF NOT EXISTS tasks (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
+        number INTEGER DEFAULT 0,
         title TEXT NOT NULL,
         completed INTEGER DEFAULT 0,
-        priority TEXT DEFAULT 'medium'
+        priority TEXT DEFAULT 'medium',
+        type TEXT DEFAULT 'feature'
       )
     `);
     dbReady.value = true;
@@ -37,12 +42,20 @@ const initDatabase = async () => {
 const loadTasks = async () => {
   if (!dbReady.value) return;
   try {
-    const rows = await Query('SELECT id, title, completed, priority FROM tasks ORDER BY id DESC') as any[];
+    // 尝试查询包含 number 和 type 字段的任务
+    let rows;
+    try {
+      rows = await Query('SELECT id, number, title, completed, priority, type FROM tasks ORDER BY id DESC') as any[];
+    } catch (e) {
+      
+    }
     tasks.value = rows.map(row => ({
       id: row.id,
+      number: row.number || 0,
       title: row.title,
       completed: Boolean(row.completed),
-      priority: row.priority as 'low' | 'medium' | 'high'
+      priority: row.priority as 'low' | 'medium' | 'high',
+      type: (row.type || 'feature') as 'bug' | 'feature' | 'refactor' | 'performance' | 'security' | 'chore' | 'migration' | 'ci' | 'test' | 'review' | 'doc' | 'subtask'
     }));
   } catch (error) {
     console.error('加载任务失败:', error);
@@ -58,6 +71,7 @@ onMounted(() => {
 const newTaskTitle = ref('');
 const dialogVisible = ref(false);
 const newTaskPriority = ref<'low' | 'medium' | 'high'>('medium');
+const newTaskType = ref<'bug' | 'feature' | 'refactor' | 'performance' | 'security' | 'chore' | 'migration' | 'ci' | 'test' | 'review' | 'doc' | 'subtask'>('feature');
 const showCompleted = ref(false);
 const editingTask = ref<Task | null>(null);
 
@@ -85,10 +99,12 @@ const openDialog = (task?: Task) => {
     editingTask.value = task;
     newTaskTitle.value = task.title;
     newTaskPriority.value = task.priority;
+    newTaskType.value = task.type;
   } else {
     editingTask.value = null;
     newTaskTitle.value = '';
     newTaskPriority.value = 'medium';
+    newTaskType.value = 'feature';
   }
   dialogVisible.value = true;
 };
@@ -98,21 +114,32 @@ const saveTask = async () => {
     if (editingTask.value) {
       editingTask.value.title = newTaskTitle.value.trim();
       editingTask.value.priority = newTaskPriority.value;
+      editingTask.value.type = newTaskType.value;
       if (dbReady.value) {
-        await Execute('UPDATE tasks SET title = ?, priority = ? WHERE id = ?', 
-          newTaskTitle.value.trim(), newTaskPriority.value, editingTask.value.id);
+        await Execute('UPDATE tasks SET title = ?, priority = ?, type = ? WHERE id = ?', 
+          newTaskTitle.value.trim(), newTaskPriority.value, newTaskType.value, editingTask.value.id);
       }
     } else {
+      // 生成新的编号
+      let newNumber = 1;
+      if (dbReady.value) {
+        const result = await Query('SELECT MAX(number) as maxNumber FROM tasks') as any[];
+        if (result.length > 0 && result[0].maxNumber) {
+          newNumber = result[0].maxNumber + 1;
+        }
+      }
       const newId = Date.now();
       tasks.value.push({
         id: newId,
+        number: newNumber,
         title: newTaskTitle.value.trim(),
         completed: false,
-        priority: newTaskPriority.value
+        priority: newTaskPriority.value,
+        type: newTaskType.value
       });
       if (dbReady.value) {
-        await Execute('INSERT INTO tasks (id, title, completed, priority) VALUES (?, ?, 0, ?)',
-          newId, newTaskTitle.value.trim(), newTaskPriority.value);
+        await Execute('INSERT INTO tasks (id, number, title, completed, priority, type) VALUES (?, ?, ?, 0, ?, ?)',
+          newId, newNumber, newTaskTitle.value.trim(), newTaskPriority.value, newTaskType.value);
       }
     }
     dialogVisible.value = false;
@@ -163,6 +190,24 @@ const getPriorityLabel = (priority: string) => {
   };
   return labels[priority] || priority;
 };
+
+const getTypeColor = (type: string): { backgroundColor: string; textColor: string } => {
+  const colors: Record<string, { backgroundColor: string; textColor: string }> = {
+    bug: { backgroundColor: '#F56C6C', textColor: '#FFFFFF' }, // 红色背景，白色文本
+    feature: { backgroundColor: '#409EFF', textColor: '#FFFFFF' }, // 蓝色背景，白色文本
+    refactor: { backgroundColor: '#E6A23C', textColor: '#FFFFFF' }, // 黄色背景，白色文本
+    performance: { backgroundColor: '#67C23A', textColor: '#FFFFFF' }, // 绿色背景，白色文本
+    security: { backgroundColor: '#909399', textColor: '#FFFFFF' }, // 灰色背景，白色文本
+    chore: { backgroundColor: '#909399', textColor: '#FFFFFF' }, // 灰色背景，白色文本
+    migration: { backgroundColor: '#E6A23C', textColor: '#FFFFFF' }, // 黄色背景，白色文本
+    ci: { backgroundColor: '#409EFF', textColor: '#FFFFFF' }, // 蓝色背景，白色文本
+    test: { backgroundColor: '#67C23A', textColor: '#FFFFFF' }, // 绿色背景，白色文本
+    review: { backgroundColor: '#909399', textColor: '#FFFFFF' }, // 灰色背景，白色文本
+    doc: { backgroundColor: '#909399', textColor: '#FFFFFF' }, // 灰色背景，白色文本
+    subtask: { backgroundColor: '#E6A23C', textColor: '#FFFFFF' } // 黄色背景，白色文本
+  };
+  return colors[type] || { backgroundColor: '#909399', textColor: '#FFFFFF' };
+};
 </script>
 
 <template>
@@ -180,14 +225,21 @@ const getPriorityLabel = (priority: string) => {
         :class="{ completed: task.completed }"
       >
         <div class="task-content">
+          <span class="task-number">{{ "#"+task.number }}</span>
           <el-checkbox
             :model-value="task.completed"
             @change="toggleTask(task)"
           />
-          <span class="task-title" @dblclick="openDialog(task)">{{ task.title }}</span>
-          <el-tag :type="getPriorityColor(task.priority)" size="small">
-            {{ getPriorityLabel(task.priority) }}
-          </el-tag>
+          <span 
+            class="task-title" 
+            @dblclick="openDialog(task)"
+            :class="`priority-${task.priority}`"
+          >{{ task.title }}</span>
+          <el-tag 
+            :color="getTypeColor(task.type).backgroundColor" 
+            :style="{ color: getTypeColor(task.type).textColor }" 
+            size="small"
+          >{{ t(`task.type.${task.type}`) }}</el-tag>
           <el-button
             type="danger"
             size="small"
@@ -228,31 +280,51 @@ const getPriorityLabel = (priority: string) => {
           :placeholder="t('task.inputPlaceholder')"
           @keyup.enter="saveTask"
         />
-        <div class="priority-tags">
-          <el-tag
-            :type="newTaskPriority === 'low' ? 'success' : 'info'"
-            :effect="newTaskPriority === 'low' ? 'dark' : 'plain'"
-            class="priority-tag"
-            @click="newTaskPriority = 'low'"
-          >
-            {{ t('task.priority.low') }}
-          </el-tag>
-          <el-tag
-            :type="newTaskPriority === 'medium' ? 'warning' : 'info'"
-            :effect="newTaskPriority === 'medium' ? 'dark' : 'plain'"
-            class="priority-tag"
-            @click="newTaskPriority = 'medium'"
-          >
-            {{ t('task.priority.medium') }}
-          </el-tag>
-          <el-tag
-            :type="newTaskPriority === 'high' ? 'danger' : 'info'"
-            :effect="newTaskPriority === 'high' ? 'dark' : 'plain'"
-            class="priority-tag"
-            @click="newTaskPriority = 'high'"
-          >
-            {{ t('task.priority.high') }}
-          </el-tag>
+        <div class="form-group">
+          <label>{{ t('task.type.label') }}</label>
+          <el-select v-model="newTaskType" class="w-full">
+            <el-option :label="t('task.type.bug')" value="bug" />
+            <el-option :label="t('task.type.feature')" value="feature" />
+            <el-option :label="t('task.type.refactor')" value="refactor" />
+            <el-option :label="t('task.type.performance')" value="performance" />
+            <el-option :label="t('task.type.security')" value="security" />
+            <el-option :label="t('task.type.chore')" value="chore" />
+            <el-option :label="t('task.type.migration')" value="migration" />
+            <el-option :label="t('task.type.ci')" value="ci" />
+            <el-option :label="t('task.type.test')" value="test" />
+            <el-option :label="t('task.type.review')" value="review" />
+            <el-option :label="t('task.type.doc')" value="doc" />
+            <el-option :label="t('task.type.subtask')" value="subtask" />
+          </el-select>
+        </div>
+        <div class="form-group">
+          <label>{{ t('task.priority.label') }}</label>
+          <div class="priority-tags">
+            <el-tag
+              :type="newTaskPriority === 'low' ? 'success' : 'info'"
+              :effect="newTaskPriority === 'low' ? 'dark' : 'plain'"
+              class="priority-tag"
+              @click="newTaskPriority = 'low'"
+            >
+              {{ t('task.priority.low') }}
+            </el-tag>
+            <el-tag
+              :type="newTaskPriority === 'medium' ? 'warning' : 'info'"
+              :effect="newTaskPriority === 'medium' ? 'dark' : 'plain'"
+              class="priority-tag"
+              @click="newTaskPriority = 'medium'"
+            >
+              {{ t('task.priority.medium') }}
+            </el-tag>
+            <el-tag
+              :type="newTaskPriority === 'high' ? 'danger' : 'info'"
+              :effect="newTaskPriority === 'high' ? 'dark' : 'plain'"
+              class="priority-tag"
+              @click="newTaskPriority = 'high'"
+            >
+              {{ t('task.priority.high') }}
+            </el-tag>
+          </div>
         </div>
       </div>
       <template #footer>
@@ -300,6 +372,15 @@ const getPriorityLabel = (priority: string) => {
   gap: 12px;
 }
 
+.task-content .el-button {
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+
+.task-item:hover .task-content .el-button {
+  opacity: 1;
+}
+
 .task-title {
   flex: 1;
   font-size: 14px;
@@ -310,6 +391,34 @@ const getPriorityLabel = (priority: string) => {
 
 .task-title:hover {
   color: var(--el-color-primary);
+}
+
+.task-title.priority-high {
+  color: var(--el-color-danger);
+}
+
+.task-title.priority-medium {
+  color: var(--el-color-warning);
+}
+
+.task-title.priority-low {
+  color: var(--el-color-success);
+}
+
+
+
+.task-id {
+  font-size: 12px;
+  color: var(--el-text-color-disabled);
+  margin-right: 8px;
+}
+
+.task-number {
+  width: 24px;
+  text-align: center;
+  font-size: 12px;
+  color: var(--el-text-color-primary);
+  margin-right: 8px;
 }
 
 .add-float-btn {
@@ -323,6 +432,17 @@ const getPriorityLabel = (priority: string) => {
   display: flex;
   flex-direction: column;
   gap: 16px;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.form-group label {
+  font-size: 14px;
+  color: var(--el-text-color-secondary);
 }
 
 .priority-tags {
